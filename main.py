@@ -1,12 +1,12 @@
-from ast import parse
+import argparse
+import json
+import sys
+from typing import Dict, List
+
 import openpyxl
 import requests
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-
 
 
 def get_eccv(year, keywords):
@@ -37,13 +37,48 @@ def get_eccv(year, keywords):
         parsed['authors'].append(author)
     return parsed
 
+def get_neurips(year     : int,
+                keywords : List[str]
+                ) -> Dict:
+
+    parsed = {'conference': f'NeurIPS {year}', 'papers': [], 'authors': []}
+    if year == 2022:
+        for i, keyword in tqdm(enumerate(keywords)):
+            res = requests.get(f"https://api.openreview.net/notes/search?term={keyword}&type=terms&content=all&source=forum&group=NeurIPS.cc%2F2022%2FConference&limit=5000&offset=0&venue=NeurIPS+2022+Accept")
+            res_json = json.loads(res.text)
+            for note in res_json['notes']:
+                parsed['papers' ].append(note['content']['title'])
+                parsed['authors'].append(note['content']['authors'])
+    else:
+        res = requests.get(f"https://papers.nips.cc/paper/{year}")
+        soup = BeautifulSoup(res.text, "html.parser")
+        for i, paper in tqdm(enumerate(soup.find_all("div",{"class":"container-fluid"})[0].findAll("li"))):
+            title = paper.findAll("a")
+            authors = paper.findAll("i")
+            parsed['papers'].append(title[0].text)
+            parsed['authors'].append(authors[0].text.split(', '))
+            pass
+    return parsed
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-conference", type=str)
+parser.add_argument("-year", type=int)
+parser.add_argument("-keywords", type=str, nargs='+')
+
+conference = {
+    'eccv'    : get_eccv,
+    'neurips' : get_neurips,
+}
 
 if __name__ == "__main__":
-    parsed_eccv = get_eccv(2022, keywords=["lifelong", 'contin', 'incre'])
+    
+    argv = parser.parse_args(sys.argv[1:])
+    parsed = conference[argv.conference](argv.year, argv.keywords)
     wb = openpyxl.Workbook()
     sheet = wb.worksheets[0]
-    for row, (paper, author) in enumerate(zip(parsed_eccv['papers'], parsed_eccv['authors']), 1):
-        sheet.cell(row=row, column=1).value = parsed_eccv['conference']
+    for row, (paper, author) in enumerate(zip(parsed['papers'], parsed['authors']), 1):
+        sheet.cell(row=row, column=1).value = parsed['conference']
         sheet.cell(row=row, column=2).value = paper
         sheet.cell(row=row, column=3).value = author[0]
-    wb.save('eccv_2022.xlsx')
+    wb.save(f'{argv.conference}_{argv.year}.xlsx')
