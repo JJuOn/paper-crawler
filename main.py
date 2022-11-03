@@ -1,15 +1,12 @@
+import argparse
 import json
-from ast import parse
+import sys
+from typing import Dict, List
 
-from typing import List, Dict
 import openpyxl
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 from tqdm import tqdm
-import sys
-import argparse
 
 
 def get_eccv(year, keywords):
