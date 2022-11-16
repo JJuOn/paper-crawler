@@ -34,10 +34,18 @@ def get_eccv(year       : int,
                 
     for idx in indices:
         # parsed["authors"]
-        author = authors[idx * 2].text.split(",")
-        for j in range(len(author)):
-            author[j] = author[j].strip()
-        parsed["authors"].append(author)
+        if year in [2020, 2022]:
+            author = authors[idx * 2].text.split(",")
+            for j in range(len(author)):
+                author[j] = author[j].strip()
+            parsed["authors"].append(author)
+        elif year in [2018]:
+            author = authors[idx * 2].text.split("and")
+            for j in range(len(author)):
+                author[j] = author[j].strip().split(',')
+                author[j][0], author[j][1] = author[j][1].strip(), author[j][0].strip()
+                author[j] = " ".join(author[j])
+            parsed["authors"].append(author)
     return parsed
 
 def get_neurips(year     : int,
