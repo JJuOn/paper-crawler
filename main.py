@@ -1,15 +1,18 @@
 import argparse
 import json
 import sys
-from typing import Dict, List
-
 import openpyxl
 import requests
+import os
+
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from typing import Dict, List
 
 
-def get_eccv(year, keywords):
+def get_eccv(year       : int,
+             keywords   : List[str]
+            ) -> Dict:
     res = requests.get("https://www.ecva.net/papers.php")
     soup = BeautifulSoup(res.text, "html.parser")
 
@@ -18,67 +21,221 @@ def get_eccv(year, keywords):
     assert len(papers) == len(authors) // 2
 
     indices = []
-    parsed = {'conference': f'ECCV {year}', 'papers': [], 'authors': []}
+    parsed = {"conference": f"ECCV {year}", "papers": [], "authors": []}
     for i, paper in tqdm(enumerate(papers)):
         if f"eccv_{year}" in paper.find("a")["href"]:
             for keyword in keywords:
                 if keyword.lower() in paper.text or keyword.upper() in paper.text or keyword.capitalize() in paper.text:
-                    parsed['papers'].append(paper.text.strip())
+                    parsed["papers"].append(paper.text.strip())
                     indices.append(i)
                     break
         else:
             continue
                 
     for idx in indices:
-        # parsed['authors']
-        author = authors[idx * 2].text.split(',')
+        # parsed["authors"]
+        author = authors[idx * 2].text.split(",")
         for j in range(len(author)):
             author[j] = author[j].strip()
-        parsed['authors'].append(author)
+        parsed["authors"].append(author)
     return parsed
 
 def get_neurips(year     : int,
                 keywords : List[str]
                 ) -> Dict:
 
-    parsed = {'conference': f'NeurIPS {year}', 'papers': [], 'authors': []}
+    parsed = {"conference": f"NeurIPS {year}", "papers": [], "authors": []}
     if year == 2022:
-        for i, keyword in tqdm(enumerate(keywords)):
-            res = requests.get(f"https://api.openreview.net/notes/search?term={keyword}&type=terms&content=all&source=forum&group=NeurIPS.cc%2F2022%2FConference&limit=5000&offset=0&venue=NeurIPS+2022+Accept")
-            res_json = json.loads(res.text)
-            for note in res_json['notes']:
-                parsed['papers' ].append(note['content']['title'])
-                parsed['authors'].append(note['content']['authors'])
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=NeurIPS+{year}+Accept&details=replyCount&offset=0&limit=1000&invitation=NeurIPS.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=NeurIPS+{year}+Accept&details=replyCount&offset={offset}&limit={limit}&invitation=NeurIPS.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for note in res_json["notes"]:
+                    title = note["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    
+                    if keyword_found:
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(note["content"]["authors"])
+                    pbar.update(1)
+                offset += limit
+        
+        return parsed
+
+        
     else:
         res = requests.get(f"https://papers.nips.cc/paper/{year}")
         soup = BeautifulSoup(res.text, "html.parser")
-        for i, paper in tqdm(enumerate(soup.find_all("div",{"class":"container-fluid"})[0].findAll("li"))):
+        for i, paper in tqdm(enumerate(soup.find_all("div", {"class":"container-fluid"})[0].findAll("li"))):
             title = paper.findAll("a")
             authors = paper.findAll("i")
-            parsed['papers'].append(title[0].text)
-            parsed['authors'].append(authors[0].text.split(', '))
-            pass
+            keyword_found = False
+            for keyword in keywords:
+                if keyword.lower() in title[0].text or keyword.upper() in title[0].text or keyword.capitalize() in title[0].text:
+                    keyword_found = True
+                    break
+            if keyword_found:
+                parsed["papers"].append(title[0].text)
+                parsed["authors"].append(authors[0].text.split(", "))
     return parsed
 
+def get_iclr(year           : int,
+             keywords       : List[str],
+             ) -> Dict:
+    if year == 2023:
+        under_review = True
+    else:
+        under_review = False
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-conference", type=str)
-parser.add_argument("-year", type=int)
-parser.add_argument("-keywords", type=str, nargs='+')
+    if under_review:
+        parsed = {"conference": f"ICLR {year} underreview", "papers": [], "authors": []}
+        res = requests.get("https://api.openreview.net/notes?details=replyCount%2Cinvitation%2Coriginal&offset=0&limit=50&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?details=replyCount%2Cinvitation%2Coriginal&offset={offset}&limit={limit}&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed["papers"].append(row["content"]["title"])
+                        parsed["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        return parsed
+    else:
+        parsed_poster = {"conference": f"ICLR {year}", "papers": [], "authors": []}
+        parsed_spotlight = {"conference": f"ICLR {year} spotlight", "papers": [], "authors": []}
+        parsed_oral = {"conference": f"ICLR {year} oral", "papers": [], "authors": []}
+        # poster session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Poster&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Poster&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_poster["papers"].append(row["content"]["title"])
+                        parsed_poster["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        # spotlight session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Spotlight&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Spotlight&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_spotlight["papers"].append(row["content"]["title"])
+                        parsed_spotlight["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        # oral session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Oral&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+Oral&details=replyCount&offset=0&limit=1000&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_oral["papers"].append(row["content"]["title"])
+                        parsed_oral["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        return parsed_poster, parsed_spotlight, parsed_oral
+
+
+
 
 conference = {
-    'eccv'    : get_eccv,
-    'neurips' : get_neurips,
+    "eccv"    : get_eccv,
+    "neurips" : get_neurips,
+    "iclr" : get_iclr,
 }
 
 if __name__ == "__main__":
-    
-    argv = parser.parse_args(sys.argv[1:])
-    parsed = conference[argv.conference](argv.year, argv.keywords)
-    wb = openpyxl.Workbook()
-    sheet = wb.worksheets[0]
-    for row, (paper, author) in enumerate(zip(parsed['papers'], parsed['authors']), 1):
-        sheet.cell(row=row, column=1).value = parsed['conference']
-        sheet.cell(row=row, column=2).value = paper
-        sheet.cell(row=row, column=3).value = author[0]
-    wb.save(f'{argv.conference}_{argv.year}.xlsx')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--conference", type=str)
+    parser.add_argument("--year", type=int)
+    parser.add_argument("--keywords", type=str, nargs="+")
+    parser.add_argument("out", type=str, default=None)
+    args = parser.parse_args()
+    parsed = conference[args.conference](args.year, args.keywords)
+    if isinstance(parsed, tuple):
+        if len(parsed) == 2:
+            pass
+        elif len(parsed) == 3: # poster, spotlight, oral
+            wb = openpyxl.Workbook()
+            sheet = wb.worksheets[0]
+            offset = 1
+            for session in range(len(parsed)):
+                for row, (paper, author) in enumerate(zip(parsed[session]["papers"], parsed[session]["authors"]), offset):
+                    sheet.cell(row=row, column=1).value = parsed[session]["conference"]
+                    sheet.cell(row=row, column=2).value = paper
+                    sheet.cell(row=row, column=3).value = author[0]
+                offset += len(parsed[session]["papers"])
+            if args.out is not None:
+                if os.path.splitext(args.out)[1] == "":
+                    args.out = args.out + ".xlsx"
+                wb.save(f"{args.out}")
+            wb.save(f"{args.conference}_{args.year}.xlsx")
+    else:
+        wb = openpyxl.Workbook()
+        sheet = wb.worksheets[0]
+        for row, (paper, author) in enumerate(zip(parsed["papers"], parsed["authors"]), 1):
+            sheet.cell(row=row, column=1).value = parsed["conference"]
+            sheet.cell(row=row, column=2).value = paper
+            sheet.cell(row=row, column=3).value = author[0]
+        if args.out is not None:
+            if os.path.splitext(args.out)[1] == "":
+                args.out = args.out + ".xlsx"
+            wb.save(f"{args.out}")
+        wb.save(f"{args.conference}_{args.year}.xlsx")
