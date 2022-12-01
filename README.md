@@ -1,4 +1,4 @@
-# Paper Parser by AGI Lab
+# Paper Crawler
 
 ### Usage
 
