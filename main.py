@@ -201,12 +201,57 @@ def get_iclr(year           : int,
         return parsed_poster, parsed_spotlight, parsed_oral
 
 
+def get_cvpr(year       : int,
+             keywords   : List[str]
+            ) -> Dict:
+    parsed = {"conference": f"CVPR {year}", "papers": [], "authors": []}
+    if year in [2021, 2022]:
+        res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}?day=all")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("dt", {"class": "ptitle"})
+        authors = soup.find_all("dd")[1:]
+        for i, paper in enumerate(tqdm(papers)):
+            for keyword in keywords:
+                if keyword.lower() in paper.text.lower():
+                    parsed["papers"].append(paper.text)
+                    parsed["authors"].append(authors[i * 2].text.split(","))
+                    break
+
+    elif year in [2018, 2019, 2020]:
+        dates = {2018: ["2018-06-19", "2018-06-20", "2018-06-21"],
+                 2019: ["2019-06-18", "2019-06-19", "2019-06-20"],
+                 2020: ["2020-06-16", "2020-06-17", "2020-06-18"]}
+        for date in dates[year]:
+            res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}?day={date}")
+            soup = BeautifulSoup(res.text, "html.parser")
+            papers = soup.find_all("dt", {"class": "ptitle"})
+            authors = soup.find_all("dd")[1:]
+            for i, paper in enumerate(papers):
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
+
+    else:
+        res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("dt", {"class": "ptitle"})
+        authors = soup.find_all("dd")[1:]
+        for i, paper in enumerate(papers):
+            for keyword in keywords:
+                if keyword.lower() in paper.text.lower():
+                    parsed["papers"].append(paper.text)
+                    parsed["authors"].append(authors[i * 2].text.split(","))
+                    break
+    return parsed
 
 
 conference = {
     "eccv"    : get_eccv,
     "neurips" : get_neurips,
     "iclr" : get_iclr,
+    "cvpr" : get_cvpr,
 }
 
 if __name__ == "__main__":
