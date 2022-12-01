@@ -334,9 +334,9 @@ conference = {
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--conference", type=str)
-    parser.add_argument("--year", type=int)
-    parser.add_argument("--keywords", type=str, nargs="+")
+    parser.add_argument("-c", "--conference", type=str)
+    parser.add_argument("-y", "--year", type=int)
+    parser.add_argument("-k", "--keywords", type=str, nargs="+")
     parser.add_argument("out", type=str, default=None)
     args = parser.parse_args()
     parsed = conference[args.conference](args.year, args.keywords)
