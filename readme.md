@@ -2,7 +2,7 @@
 
 ### Usage
 
-`usage: main.py conference_year.xlsx [--conference CONFERENCE] [--year YEAR] [--keywords KEYWORDS [KEYWORDS ...]`
+`usage: main.py conference_year.xlsx [--conference | -c CONFERENCE] [--year | -y YEAR] [--keywords | -k KEYWORDS [KEYWORDS ...]`
 
 
 ### Requirements
@@ -19,3 +19,6 @@
 - Neural Information Processing Systems (NeurIPS ~2022)
 - International Conference on Learning Representations (ICLR ~2022, 2023 under-review)
 - European Conference on Computer Vision (ECCV 2018~2022)
+- IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR ~2022)
+- International Conference on Computer Vision (ICCV ~2021)
+- International Conference on Machine Learning (ICML ~2022)
