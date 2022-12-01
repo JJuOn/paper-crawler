@@ -246,12 +246,55 @@ def get_cvpr(year       : int,
                     break
     return parsed
 
+def get_iccv(year       : int,
+             keywords   : List[str]
+            ) -> Dict:
+    parsed = {"conference": f"ICCV {year}", "papers": [], "authors": []}
+    if year in [2021]:
+        res = requests.get(f"https://openaccess.thecvf.com/ICCV{year}?day=all")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("dt", {"class": "ptitle"})
+        authors = soup.find_all("dd")[1:]
+        for i, paper in enumerate(tqdm(papers)):
+            for keyword in keywords:
+                if keyword.lower() in paper.text.lower():
+                    parsed["papers"].append(paper.text)
+                    parsed["authors"].append(authors[i * 2].text.split(","))
+                    break
+
+    elif year in [2019]:
+        dates = {2019: ["2019-10-29", "2019-10-30", "2019-10-31", "2019-11-01"]}
+        for date in dates[year]:
+            res = requests.get(f"https://openaccess.thecvf.com/ICCV{year}?day={date}")
+            soup = BeautifulSoup(res.text, "html.parser")
+            papers = soup.find_all("dt", {"class": "ptitle"})
+            authors = soup.find_all("dd")[1:]
+            for i, paper in enumerate(papers):
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
+
+    else:
+        res = requests.get(f"https://openaccess.thecvf.com/ICCV{year}")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("dt", {"class": "ptitle"})
+        authors = soup.find_all("dd")
+        for i, paper in enumerate(papers):
+            for keyword in keywords:
+                if keyword.lower() in paper.text.lower():
+                    parsed["papers"].append(paper.text)
+                    parsed["authors"].append(authors[i * 2].text.split(","))
+                    break
+    return parsed
 
 conference = {
     "eccv"    : get_eccv,
     "neurips" : get_neurips,
     "iclr" : get_iclr,
     "cvpr" : get_cvpr,
+    "iccv" : get_iccv,
 }
 
 if __name__ == "__main__":
