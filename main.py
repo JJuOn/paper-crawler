@@ -289,12 +289,47 @@ def get_iccv(year       : int,
                     break
     return parsed
 
+def get_icml(year       : int,
+             keywords   : List[str]
+            ) -> Dict:
+    parsed = {"conference": f"ICML {year}", "papers": [], "authors": []}
+    res = requests.get("https://proceedings.mlr.press")
+    soup = BeautifulSoup(res.text, "html.parser")
+    proceedings_list = soup.find_all("ul", {"class": "proceedings-list"})[1].find_all("li")
+    for proceeding in proceedings_list:
+        if year >= 2017:
+            if f"Proceedings of ICML {year}" in proceeding.text and "Workshop" not in proceeding.text:
+                href = proceeding.find("a")["href"]
+                break
+        else:
+            if f"ICML {year} Proceedings" in proceeding.text and "Workshop" not in proceeding.text:
+                href = proceeding.find("a")["href"]
+                break
+
+    res = requests.get(f"https://proceedings.mlr.press/{href}")
+    soup = BeautifulSoup(res.text, "html.parser")
+    papers = soup.find_all("div", {"class": "paper"})
+    for paper in tqdm(papers):
+        title = paper.find("p", {"class": "title"}).text
+        for keyword in keywords:
+            if keyword.lower() in title.lower():
+                authors = paper.find("p", {"class": "details"}).find("span", {"class": "authors"}).text.split(",")
+                authors = [a.strip() for a in authors]
+                parsed["papers"].append(title)
+                parsed["authors"].append(authors)
+                
+
+    return parsed
+
+
+
 conference = {
     "eccv"    : get_eccv,
     "neurips" : get_neurips,
     "iclr" : get_iclr,
     "cvpr" : get_cvpr,
     "iccv" : get_iccv,
+    "icml" : get_icml
 }
 
 if __name__ == "__main__":
