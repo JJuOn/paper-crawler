@@ -337,9 +337,8 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--conference", type=str)
     parser.add_argument("-y", "--year", type=int)
     parser.add_argument("-k", "--keywords", type=str, nargs="+")
-    parser.add_argument("out", type=str, default=None)
     args = parser.parse_args()
-    parsed = conference[args.conference](args.year, args.keywords)
+    parsed = conference[args.conference.lower()](args.year, args.keywords)
     if isinstance(parsed, tuple):
         if len(parsed) == 2:
             pass
@@ -353,11 +352,6 @@ if __name__ == "__main__":
                     sheet.cell(row=row, column=2).value = paper
                     sheet.cell(row=row, column=3).value = author[0]
                 offset += len(parsed[session]["papers"])
-            if args.out is not None:
-                if os.path.splitext(args.out)[1] == "":
-                    args.out = args.out + ".xlsx"
-                wb.save(f"{args.out}")
-            wb.save(f"{args.conference}_{args.year}.xlsx")
     else:
         wb = openpyxl.Workbook()
         sheet = wb.worksheets[0]
@@ -365,8 +359,11 @@ if __name__ == "__main__":
             sheet.cell(row=row, column=1).value = parsed["conference"]
             sheet.cell(row=row, column=2).value = paper
             sheet.cell(row=row, column=3).value = author[0]
-        if args.out is not None:
-            if os.path.splitext(args.out)[1] == "":
-                args.out = args.out + ".xlsx"
-            wb.save(f"{args.out}")
-        wb.save(f"{args.conference}_{args.year}.xlsx")
+    if args.conference.lower() == 'neurips':
+        upper_conference = 'NeurIPS'
+    else:
+        upper_conference = args.conference.upper()
+    keywords = [k.lower() for k in args.keywords]
+    keywords = "_".join(sorted(keywords))
+    save_path = f"{upper_conference}_{args.year}_{keywords}.xlsx"
+    wb.save(save_path)

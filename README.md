@@ -2,7 +2,7 @@
 
 ### Usage
 
-`usage: main.py conference_year.xlsx [--conference | -c CONFERENCE] [--year | -y YEAR] [--keywords | -k KEYWORDS [KEYWORDS ...]`
+`usage: main.py [--conference | -c CONFERENCE] [--year | -y YEAR] [--keywords | -k KEYWORDS [KEYWORDS ...]`
 
 
 ### Requirements
