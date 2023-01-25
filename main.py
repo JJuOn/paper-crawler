@@ -324,7 +324,6 @@ def get_icml(year       : int,
 def get_acl(year    : int,
             keywords: List[str]) -> Dict:
     parsed = {"conference": f"ACL {year}", "papers": [], "authors": []}
-
     if year >= 2021:
         res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
         soup = BeautifulSoup(res.text, "html.parser")
@@ -421,8 +420,22 @@ def get_acl(year    : int,
 def get_emnlp(year    : int,
               keywords: List[str]) -> Dict:
     parsed = {"conference": f"EMNLP {year}", "papers": [], "authors": []}
-
-    if year >= 2020:
+    if year == 2022:
+        res = requests.get("https://preview.aclanthology.org/emnlp-22-ingestion/volumes/2022.emnlp-main/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    break
+                
+    elif year >= 2020:
         res = requests.get(f"https://aclanthology.org/events/emnlp-{year}/")
         soup = BeautifulSoup(res.text, "html.parser")
         div = soup.find_all("div", {"id": f"{year}emnlp-main"})[0]
