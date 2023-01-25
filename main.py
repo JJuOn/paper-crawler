@@ -339,7 +339,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
             
 
@@ -354,7 +353,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
 
     elif year == 2020:
@@ -371,7 +369,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
 
     elif year == 2019:
@@ -388,7 +385,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
 
     elif year == 2018:
@@ -405,7 +401,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
             
         short_div = soup.find_all("div", {"id": f"p{str(year)[2:]}-2"})[0]
@@ -419,7 +414,6 @@ def get_acl(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
     
     return parsed
@@ -442,7 +436,6 @@ def get_emnlp(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
     
     elif year >= 2018:
@@ -459,7 +452,6 @@ def get_emnlp(year    : int,
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    print(title, authors)
                     break
     
     return parsed
