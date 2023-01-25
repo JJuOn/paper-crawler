@@ -424,9 +424,45 @@ def get_acl(year    : int,
     
     return parsed
 
+def get_emnlp(year    : int,
+              keywords: List[str]) -> Dict:
+    parsed = {"conference": f"EMNLP {year}", "papers": [], "authors": []}
 
-
-
+    if year >= 2020:
+        res = requests.get(f"https://aclanthology.org/events/emnlp-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        div = soup.find_all("div", {"id": f"{year}emnlp-main"})[0]
+        papers = div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+    
+    elif year >= 2018:
+        res = requests.get(f"https://aclanthology.org/events/emnlp-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        div = soup.find_all("div", {"id": f"d{str(year)[2:]}-1"})[0]
+        papers = div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+    
+    return parsed
 
 conference = {
     "eccv"    : get_eccv,
@@ -436,6 +472,7 @@ conference = {
     "iccv" : get_iccv,
     "icml" : get_icml,
     "acl" : get_acl,
+    "emnlp" : get_emnlp,
 }
 
 if __name__ == "__main__":
