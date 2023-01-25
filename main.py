@@ -321,6 +321,111 @@ def get_icml(year       : int,
 
     return parsed
 
+def get_acl(year    : int,
+            keywords: List[str]) -> Dict:
+    parsed = {"conference": f"ACL {year}", "papers": [], "authors": []}
+
+    if year >= 2021:
+        res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        long_div = soup.find_all("div", {"id": f"{year}acl-long"})[0]
+        papers = long_div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+            
+
+        short_div = soup.find_all("div", {"id": f"{year}acl-short"})[0]
+        papers = short_div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+
+    elif year == 2020:
+        res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        div = soup.find_all("div", {"id": f"{year}acl-main"})[0]
+        papers = div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+
+    elif year == 2019:
+        res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        div = soup.find_all("div", {"id": f"p{str(year)[2:]}-1"})[0]
+        papers = div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+
+    elif year == 2018:
+        res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
+        soup = BeautifulSoup(res.text, "html.parser")
+        long_div = soup.find_all("div", {"id": f"p{str(year)[2:]}-1"})[0]
+        papers = long_div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+            
+        short_div = soup.find_all("div", {"id": f"p{str(year)[2:]}-2"})[0]
+        papers = short_div.find_all("span", {"class": "d-block"})
+        for paper in tqdm(papers):
+            a_list = paper.find_all("a")
+            title = a_list[0].text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = a_list[1:]
+                    authors = [a.text for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    print(title, authors)
+                    break
+    
+    return parsed
+
+
+
 
 
 conference = {
@@ -329,7 +434,8 @@ conference = {
     "iclr" : get_iclr,
     "cvpr" : get_cvpr,
     "iccv" : get_iccv,
-    "icml" : get_icml
+    "icml" : get_icml,
+    "acl" : get_acl,
 }
 
 if __name__ == "__main__":

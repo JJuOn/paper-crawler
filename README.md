@@ -22,3 +22,4 @@
 - IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR ~2022)
 - International Conference on Computer Vision (ICCV ~2021)
 - International Conference on Machine Learning (ICML ~2022)
+- Annual Meeting of the Assosication for Computational Linguistics (ACL 2018~2022)
