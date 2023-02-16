@@ -100,20 +100,18 @@ def get_iclr(year           : int,
              keywords       : List[str],
              ) -> Dict:
     if year == 2023:
-        under_review = True
-    else:
-        under_review = False
-
-    if under_review:
-        parsed = {"conference": f"ICLR {year} underreview", "papers": [], "authors": []}
-        res = requests.get("https://api.openreview.net/notes?details=replyCount%2Cinvitation%2Coriginal&offset=0&limit=50&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
+        parsed_5 = {"conference": f"ICLR {year} top 5%", "papers": [], "authors": []}
+        parsed_25 = {"conference": f"ICLR {year} top 25%", "papers": [], "authors": []}
+        parsed_poster = {"conference": f"ICLR {year}", "papers": [], "authors": []}
+        # poster session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+poster&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
         res_json = json.loads(res.text)
         max_count = res_json["count"]
         offset = 0
         limit = 1000
         with tqdm(range(max_count)) as pbar:
             while offset <= max_count:
-                res = requests.get(f"https://api.openreview.net/notes?details=replyCount%2Cinvitation%2Coriginal&offset={offset}&limit={limit}&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+poster&details=replyCount&offset={offset}&limit={limit}&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
                 res_json = json.loads(res.text)
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
@@ -123,11 +121,55 @@ def get_iclr(year           : int,
                             keyword_found = True
                             break
                     if keyword_found:
-                        parsed["papers"].append(row["content"]["title"])
-                        parsed["authors"].append(["Anonymous"])
+                        parsed_poster["papers"].append(row["content"]["title"])
+                        parsed_poster["authors"].append(row["content"]["authors"])
                     pbar.update(1)
                 offset += limit
-        return parsed
+        # top 25% session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+notable+top+25%25&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+notable+top+25%25&details=replyCount&offset={offset}&limit={limit}&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_25["papers"].append(row["content"]["title"])
+                        parsed_25["authors"].append(row["content"]["authors"])
+                    pbar.update(1)
+                offset += limit
+        # top 5% session
+        res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+notable+top+5%25&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api.openreview.net/notes?content.venue=ICLR+{year}+notable+top+5%25&details=replyCount&offset={offset}&limit={limit}&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_5["papers"].append(row["content"]["title"])
+                        parsed_5["authors"].append(row["content"]["authors"])
+                    pbar.update(1)
+                offset += limit
+        return parsed_poster, parsed_25, parsed_5
     else:
         parsed_poster = {"conference": f"ICLR {year}", "papers": [], "authors": []}
         parsed_spotlight = {"conference": f"ICLR {year} spotlight", "papers": [], "authors": []}
@@ -151,7 +193,7 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_poster["papers"].append(row["content"]["title"])
-                        parsed_poster["authors"].append(["Anonymous"])
+                        parsed_poster["authors"].append(row["content"]["authors"])
                     pbar.update(1)
                 offset += limit
         # spotlight session
@@ -173,7 +215,7 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_spotlight["papers"].append(row["content"]["title"])
-                        parsed_spotlight["authors"].append(["Anonymous"])
+                        parsed_spotlight["authors"].append(row["content"]["authors"])
                     pbar.update(1)
                 offset += limit
         # oral session
@@ -195,7 +237,7 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_oral["papers"].append(row["content"]["title"])
-                        parsed_oral["authors"].append(["Anonymous"])
+                        parsed_oral["authors"].append(row["content"]["authors"])
                     pbar.update(1)
                 offset += limit
         return parsed_poster, parsed_spotlight, parsed_oral
