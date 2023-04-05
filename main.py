@@ -545,6 +545,7 @@ if __name__ == "__main__":
     parseds = []
     if args.conference_all:
         for conf in conference:
+            print(f"Start {conf}")
             for year in years:
                 try:
                     parseds.append(conference[conf](year, args.keywords))
