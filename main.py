@@ -588,7 +588,10 @@ if __name__ == "__main__":
                 upper_conference = args.conference.upper()
         else:
             upper_conference = 'ALL'
+
+        year = str(years)[1:-1]
+        
         keywords = [k.lower() for k in args.keywords]
         keywords = "_".join(sorted(keywords))
-        save_path = f"{upper_conference}_{args.year}_{keywords}.xlsx"
+        save_path = f"{upper_conference}_{year}_{keywords}.xlsx"
         wb.save(save_path)
