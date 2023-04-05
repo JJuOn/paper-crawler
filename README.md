@@ -2,8 +2,20 @@
 
 ### Usage
 
-`usage: main.py [--conference | -c CONFERENCE] [--year | -y YEAR] [--keywords | -k KEYWORDS [KEYWORDS ...]`
+`usage: python main.py [--conference | -c CONFERENCE [CONFERENCE ...]] [--year | -y YEAR [YEAR ...]] [--keywords | -k KEYWORDS [KEYWORDS ...]]`
 
+#### Special Arguments
+- Mutiple conferences:  
+    `-c CVPR NeurIPS ICLR`,  
+    `-c CVPR,NeurIPS,ICLR`,  
+    or `-c CVPR, NeurIPS, ICLR`
+- All supported conferences (see conferences list below): `-c all`
+- Multiple years:  
+    `-y 2021 2022 2023`,  
+    `-y 2021,2022,2023`,  
+    `-y 2021, 2022, 2023`,  
+    `-y 2021-2023`,  
+    or `-y 2021~2023`
 
 ### Requirements
 
@@ -17,7 +29,7 @@
 
 ### Confereces
 - Neural Information Processing Systems (NeurIPS ~2022)
-- International Conference on Learning Representations (ICLR ~2022, 2023 under-review)
+- International Conference on Learning Representations (ICLR ~2023 under-review)
 - European Conference on Computer Vision (ECCV 2018~2022)
 - IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR ~2022)
 - International Conference on Computer Vision (ICCV ~2021)

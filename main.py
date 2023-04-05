@@ -9,6 +9,40 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from typing import Dict, List
 
+def process_conferences(conferences: List[str]) -> List[str]:
+    temp = []
+
+    for c in args.conference:
+        temp += c.split(",")
+    
+    if "all" in temp:
+        temp = list(conference.keys())
+
+    return temp
+
+def process_years(years: List[str]) -> List[int]:
+    temp = []
+    for year in years:
+        temp += year.split(",")
+    
+    temp2 = []
+    for i in range(len(temp)):
+        if "-" in temp[i]:
+            start, end = temp[i].split("-")
+            temp2 += [str(i) for i in range(int(start), int(end) + 1)]
+        elif "~" in temp[i]:
+            start, end = temp[i].split("~")
+            temp2 += [str(i) for i in range(int(start), int(end) + 1)]
+        else:
+            temp2.append(temp[i])
+    
+    return sorted([int(i) for i in list(set(temp2))])
+
+def upper_title(title: str) -> str:
+    if title.lower() == "neurips":
+        return "NeurIPS"
+    else:
+        return title
 
 def get_eccv(year       : int,
              keywords   : List[str]
@@ -46,6 +80,8 @@ def get_eccv(year       : int,
                 author[j][0], author[j][1] = author[j][1].strip(), author[j][0].strip()
                 author[j] = " ".join(author[j])
             parsed["authors"].append(author)
+        else:
+            raise
     return parsed
 
 def get_neurips(year     : int,
@@ -457,6 +493,9 @@ def get_acl(year    : int,
                     parsed["authors"].append(authors)
                     break
     
+    else:
+        raise
+    
     return parsed
 
 def get_emnlp(year    : int,
@@ -509,6 +548,9 @@ def get_emnlp(year    : int,
                     parsed["authors"].append(authors)
                     break
     
+    else:
+        raise
+    
     return parsed
 
 conference = {
@@ -524,35 +566,15 @@ conference = {
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--conference", type=str, nargs="+")
-    parser.add_argument("-ca", "--conference-all", action="store_true")
-    parser.add_argument("-y", "--year", type=int)
-    parser.add_argument("-f", "--frm", type=int)
-    parser.add_argument("-t", "--to", type=int)
-    parser.add_argument("-k", "--keywords", type=str, nargs="+")
+    parser.add_argument("-c", "--conference", required=True, type=str, nargs="+")
+    parser.add_argument("-y", "--year", required=True, type=str, nargs="+") # 
+    parser.add_argument("-k", "--keywords", required=True, type=str, nargs="+")
 
     args = parser.parse_args()
-    
-    is_conference = args.conference
-    is_conference_all = args.conference_all
-    # No Xor in Python?
-    # Fxxking Python
-    # it is not a complete language
-    assert (is_conference or is_conference_all) and not (is_conference and is_conference_all), "Please specify conference name or conference_all"
-    assert args.year or (args.frm and args.to), "Please specify year or from and to"
-    assert args.keywords, "Please specify keywords"
 
-    years = []
-    if args.year:
-        years.append(args.year)
-    else:
-        years = list(range(args.frm, args.to+1))
-
-    conferences = []
-    if args.conference:
-        conferences = args.conference
-    else:
-        conferences = list(conference.keys())
+    # Process arguments
+    conferences = process_conferences(args.conference)
+    years = process_years(args.year)
 
     parseds = []
     for conf in conferences:
@@ -585,16 +607,15 @@ if __name__ == "__main__":
                 sheet.cell(row=row, column=2).value = paper
                 sheet.cell(row=row, column=3).value = author[0]
             offset += len(parsed["papers"])
-    if args.conference:
-        if args.conference.lower() == 'neurips':
-            upper_conference = 'NeurIPS'
-        else:
-            upper_conference = args.conference.upper()
+
+    if not len(args.conference) == len(list(conference.keys())):
+        upper_conference = "_".join([upper_title(c) for c in conferences])
     else:
         upper_conference = 'ALL'
-    year = str(years)[1:-1]
+
+    years = "_".join([str(y) for y in years])
     keywords = [k.lower() for k in args.keywords]
     keywords = "_".join(sorted(keywords))
 
-    save_path = f"{upper_conference}_{year}_{keywords}.xlsx"
+    save_path = f"{upper_conference}_{years}_{keywords}.xlsx"
     wb.save(save_path)
