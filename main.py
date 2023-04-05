@@ -581,10 +581,13 @@ if __name__ == "__main__":
                 sheet.cell(row=row, column=1).value = parsed["conference"]
                 sheet.cell(row=row, column=2).value = paper
                 sheet.cell(row=row, column=3).value = author[0]
-        if args.conference.lower() == 'neurips':
-            upper_conference = 'NeurIPS'
+        if args.conference:
+            if args.conference.lower() == 'neurips':
+                upper_conference = 'NeurIPS'
+            else:
+                upper_conference = args.conference.upper()
         else:
-            upper_conference = args.conference.upper()
+            upper_conference = 'ALL'
         keywords = [k.lower() for k in args.keywords]
         keywords = "_".join(sorted(keywords))
         save_path = f"{upper_conference}_{args.year}_{keywords}.xlsx"
