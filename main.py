@@ -525,35 +525,66 @@ conference = {
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--conference", type=str)
+    parser.add_argument("-ca", "--conference_all", action="store_true")
     parser.add_argument("-y", "--year", type=int)
+    parser.add_argument("-f", "--frm", type=int)
+    parser.add_argument("-t", "--to", type=int)
     parser.add_argument("-k", "--keywords", type=str, nargs="+")
+
     args = parser.parse_args()
-    parsed = conference[args.conference.lower()](args.year, args.keywords)
-    if isinstance(parsed, tuple):
-        if len(parsed) == 2:
-            pass
-        elif len(parsed) == 3: # poster, spotlight, oral
+    assert args.conference or args.conference_all, "Please specify conference name or conference_all"
+    assert args.year or (args.frm and args.to), "Please specify year or from and to"
+    assert args.keywords, "Please specify keywords"
+
+    years = []
+    if args.year:
+        years.append(args.year)
+    else:
+        years = list(range(args.frm, args.to+1))
+
+    parseds = []
+    if args.conference_all:
+        for conf in conference:
+            for year in years:
+                try:
+                    parseds.append(conference[conf](year, args.keywords))
+                except:
+                    print(f"{conf} {year} failed")
+                    pass
+    else:
+        for year in years:
+            try:
+                parseds.append(conference[args.conference.lower()](year, args.keywords))
+            except:
+                print(f"{args.conference} {year} failed")
+                pass
+
+    for parsed in parseds:
+        if isinstance(parsed, tuple):
+            if len(parsed) == 2:
+                pass
+            elif len(parsed) == 3: # poster, spotlight, oral
+                wb = openpyxl.Workbook()
+                sheet = wb.worksheets[0]
+                offset = 1
+                for session in range(len(parsed)):
+                    for row, (paper, author) in enumerate(zip(parsed[session]["papers"], parsed[session]["authors"]), offset):
+                        sheet.cell(row=row, column=1).value = parsed[session]["conference"]
+                        sheet.cell(row=row, column=2).value = paper
+                        sheet.cell(row=row, column=3).value = author[0]
+                    offset += len(parsed[session]["papers"])
+        else:
             wb = openpyxl.Workbook()
             sheet = wb.worksheets[0]
-            offset = 1
-            for session in range(len(parsed)):
-                for row, (paper, author) in enumerate(zip(parsed[session]["papers"], parsed[session]["authors"]), offset):
-                    sheet.cell(row=row, column=1).value = parsed[session]["conference"]
-                    sheet.cell(row=row, column=2).value = paper
-                    sheet.cell(row=row, column=3).value = author[0]
-                offset += len(parsed[session]["papers"])
-    else:
-        wb = openpyxl.Workbook()
-        sheet = wb.worksheets[0]
-        for row, (paper, author) in enumerate(zip(parsed["papers"], parsed["authors"]), 1):
-            sheet.cell(row=row, column=1).value = parsed["conference"]
-            sheet.cell(row=row, column=2).value = paper
-            sheet.cell(row=row, column=3).value = author[0]
-    if args.conference.lower() == 'neurips':
-        upper_conference = 'NeurIPS'
-    else:
-        upper_conference = args.conference.upper()
-    keywords = [k.lower() for k in args.keywords]
-    keywords = "_".join(sorted(keywords))
-    save_path = f"{upper_conference}_{args.year}_{keywords}.xlsx"
-    wb.save(save_path)
+            for row, (paper, author) in enumerate(zip(parsed["papers"], parsed["authors"]), 1):
+                sheet.cell(row=row, column=1).value = parsed["conference"]
+                sheet.cell(row=row, column=2).value = paper
+                sheet.cell(row=row, column=3).value = author[0]
+        if args.conference.lower() == 'neurips':
+            upper_conference = 'NeurIPS'
+        else:
+            upper_conference = args.conference.upper()
+        keywords = [k.lower() for k in args.keywords]
+        keywords = "_".join(sorted(keywords))
+        save_path = f"{upper_conference}_{args.year}_{keywords}.xlsx"
+        wb.save(save_path)
