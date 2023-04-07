@@ -42,7 +42,7 @@ def upper_title(title: str) -> str:
     if title.lower() == "neurips":
         return "NeurIPS"
     else:
-        return title
+        return title.upper()
 
 def get_eccv(year       : int,
              keywords   : List[str]
@@ -608,7 +608,7 @@ if __name__ == "__main__":
                 sheet.cell(row=row, column=3).value = author[0]
             offset += len(parsed["papers"])
 
-    if not len(args.conference) == len(list(conference.keys())):
+    if not len(conferences) == len(list(conference.keys())):
         upper_conference = "_".join([upper_title(c) for c in conferences])
     else:
         upper_conference = 'ALL'
