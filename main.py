@@ -45,7 +45,8 @@ def upper_title(title: str) -> str:
         return title.upper()
 
 def get_eccv(year       : int,
-             keywords   : List[str]
+             keywords   : List[str], And : bool = False
+            
             ) -> Dict:
     res = requests.get("https://www.ecva.net/papers.php")
     soup = BeautifulSoup(res.text, "html.parser")
@@ -58,11 +59,21 @@ def get_eccv(year       : int,
     parsed = {"conference": f"ECCV {year}", "papers": [], "authors": []}
     for i, paper in tqdm(enumerate(papers)):
         if f"eccv_{year}" in paper.find("a")["href"]:
-            for keyword in keywords:
-                if keyword.lower() in paper.text or keyword.upper() in paper.text or keyword.capitalize() in paper.text:
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in paper.text and keyword.upper() not in paper.text and keyword.capitalize() not in paper.text:
+                        flag = False
+                        break
+                if flag:
                     parsed["papers"].append(paper.text.strip())
                     indices.append(i)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in paper.text or keyword.upper() in paper.text or keyword.capitalize() in paper.text:
+                        parsed["papers"].append(paper.text.strip())
+                        indices.append(i)
+                        break
         else:
             continue
                 
@@ -85,7 +96,7 @@ def get_eccv(year       : int,
     return parsed
 
 def get_neurips(year     : int,
-                keywords : List[str]
+                keywords : List[str], And : bool = False
                 ) -> Dict:
 
     parsed = {"conference": f"NeurIPS {year}", "papers": [], "authors": []}
@@ -102,11 +113,20 @@ def get_neurips(year     : int,
                 for note in res_json["notes"]:
                     title = note["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
-                    
+                            
+                    else:
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed["papers"].append(title)
                         parsed["authors"].append(note["content"]["authors"])
@@ -123,17 +143,27 @@ def get_neurips(year     : int,
             title = paper.findAll("a")
             authors = paper.findAll("i")
             keyword_found = False
-            for keyword in keywords:
-                if keyword.lower() in title[0].text or keyword.upper() in title[0].text or keyword.capitalize() in title[0].text:
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title[0].text and keyword.upper() not in title[0].text and keyword.capitalize() not in title[0].text:
+                        flag = False
+                        break
+                if flag:
                     keyword_found = True
-                    break
+                    
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title[0].text or keyword.upper() in title[0].text or keyword.capitalize() in title[0].text:
+                        keyword_found = True
+                        break
             if keyword_found:
                 parsed["papers"].append(title[0].text)
                 parsed["authors"].append(authors[0].text.split(", "))
     return parsed
 
 def get_iclr(year           : int,
-             keywords       : List[str],
+             keywords       : List[str],And : bool = False
              ) -> Dict:
     if year == 2023:
         parsed_5 = {"conference": f"ICLR {year} top 5%", "papers": [], "authors": []}
@@ -152,10 +182,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_poster["papers"].append(row["content"]["title"])
                         parsed_poster["authors"].append(row["content"]["authors"])
@@ -174,10 +213,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_25["papers"].append(row["content"]["title"])
                         parsed_25["authors"].append(row["content"]["authors"])
@@ -196,10 +244,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_5["papers"].append(row["content"]["title"])
                         parsed_5["authors"].append(row["content"]["authors"])
@@ -223,10 +280,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_poster["papers"].append(row["content"]["title"])
                         parsed_poster["authors"].append(row["content"]["authors"])
@@ -245,10 +311,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_spotlight["papers"].append(row["content"]["title"])
                         parsed_spotlight["authors"].append(row["content"]["authors"])
@@ -267,10 +342,19 @@ def get_iclr(year           : int,
                 for row in res_json["notes"]:
                     title = row["content"]["title"]
                     keyword_found = False
-                    for keyword in keywords:
-                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                    if And : #if And condition is true, then all keywords must be present in the paper
+                        flag = True
+                        for keyword in keywords:
+                            if keyword.lower() not in title and keyword.upper() not in title and keyword.capitalize() not in title:
+                                flag = False
+                                break
+                        if flag:
                             keyword_found = True
-                            break
+                    else:    
+                        for keyword in keywords:
+                            if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                                keyword_found = True
+                                break
                     if keyword_found:
                         parsed_oral["papers"].append(row["content"]["title"])
                         parsed_oral["authors"].append(row["content"]["authors"])
@@ -280,7 +364,7 @@ def get_iclr(year           : int,
 
 
 def get_cvpr(year       : int,
-             keywords   : List[str]
+             keywords   : List[str], And : bool = False
             ) -> Dict:
     parsed = {"conference": f"CVPR {year}", "papers": [], "authors": []}
     if year in [2021, 2022]:
@@ -289,11 +373,23 @@ def get_cvpr(year       : int,
         papers = soup.find_all("dt", {"class": "ptitle"})
         authors = soup.find_all("dd")[1:]
         for i, paper in enumerate(tqdm(papers)):
-            for keyword in keywords:
-                if keyword.lower() in paper.text.lower():
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in paper.text.lower():
+                        flag = False
+                        break
+                if flag:
                     parsed["papers"].append(paper.text)
-                    parsed["authors"].append(authors[i * 2].text.split(","))
-                    break
+                    parsed["authors"].append(authors[i * 2].text.split(","))          
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
+            
+            
 
     elif year in [2018, 2019, 2020]:
         dates = {2018: ["2018-06-19", "2018-06-20", "2018-06-21"],
@@ -305,11 +401,21 @@ def get_cvpr(year       : int,
             papers = soup.find_all("dt", {"class": "ptitle"})
             authors = soup.find_all("dd")[1:]
             for i, paper in enumerate(papers):
-                for keyword in keywords:
-                    if keyword.lower() in paper.text.lower():
+                if And : #if And condition is true, then all keywords must be present in the paper
+                    flag = True
+                    for keyword in keywords:
+                        if keyword.lower() not in paper.text.lower() :
+                            flag = False
+                            break
+                    if flag:
                         parsed["papers"].append(paper.text)
-                        parsed["authors"].append(authors[i * 2].text.split(","))
-                        break
+                        parsed["authors"].append(authors[i * 2].text.split(","))          
+                else :
+                    for keyword in keywords:
+                        if keyword.lower() in paper.text.lower():
+                            parsed["papers"].append(paper.text)
+                            parsed["authors"].append(authors[i * 2].text.split(","))
+                            break
 
     else:
         res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}")
@@ -317,15 +423,25 @@ def get_cvpr(year       : int,
         papers = soup.find_all("dt", {"class": "ptitle"})
         authors = soup.find_all("dd")[1:]
         for i, paper in enumerate(papers):
-            for keyword in keywords:
-                if keyword.lower() in paper.text.lower():
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in paper.text.lower():
+                        flag = False
+                        break
+                if flag:
                     parsed["papers"].append(paper.text)
-                    parsed["authors"].append(authors[i * 2].text.split(","))
-                    break
+                    parsed["authors"].append(authors[i * 2].text.split(","))          
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
     return parsed
 
 def get_iccv(year       : int,
-             keywords   : List[str]
+             keywords   : List[str], And : bool = False
             ) -> Dict:
     parsed = {"conference": f"ICCV {year}", "papers": [], "authors": []}
     if year in [2021]:
@@ -334,11 +450,21 @@ def get_iccv(year       : int,
         papers = soup.find_all("dt", {"class": "ptitle"})
         authors = soup.find_all("dd")[1:]
         for i, paper in enumerate(tqdm(papers)):
-            for keyword in keywords:
-                if keyword.lower() in paper.text.lower():
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in paper.text.lower():
+                        flag = False
+                        break
+                if flag:
                     parsed["papers"].append(paper.text)
-                    parsed["authors"].append(authors[i * 2].text.split(","))
-                    break
+                    parsed["authors"].append(authors[i * 2].text.split(","))          
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
 
     elif year in [2019]:
         dates = {2019: ["2019-10-29", "2019-10-30", "2019-10-31", "2019-11-01"]}
@@ -348,11 +474,21 @@ def get_iccv(year       : int,
             papers = soup.find_all("dt", {"class": "ptitle"})
             authors = soup.find_all("dd")[1:]
             for i, paper in enumerate(papers):
-                for keyword in keywords:
-                    if keyword.lower() in paper.text.lower():
+                if And : #if And condition is true, then all keywords must be present in the paper
+                    flag = True
+                    for keyword in keywords:
+                        if keyword.lower() not in paper.text and keyword.upper() not in paper.text and keyword.capitalize() not in paper.text:
+                            flag = False
+                            break
+                    if flag:
                         parsed["papers"].append(paper.text)
-                        parsed["authors"].append(authors[i * 2].text.split(","))
-                        break
+                        parsed["authors"].append(authors[i * 2].text.split(","))          
+                else :
+                    for keyword in keywords:
+                        if keyword.lower() in paper.text.lower():
+                            parsed["papers"].append(paper.text)
+                            parsed["authors"].append(authors[i * 2].text.split(","))
+                            break
 
     else:
         res = requests.get(f"https://openaccess.thecvf.com/ICCV{year}")
@@ -360,15 +496,25 @@ def get_iccv(year       : int,
         papers = soup.find_all("dt", {"class": "ptitle"})
         authors = soup.find_all("dd")
         for i, paper in enumerate(papers):
-            for keyword in keywords:
-                if keyword.lower() in paper.text.lower():
+            if And : #if And condition is true, then all keywords must be present in the paper
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in paper.text and keyword.upper() not in paper.text and keyword.capitalize() not in paper.text:
+                        flag = False
+                        break
+                if flag:
                     parsed["papers"].append(paper.text)
-                    parsed["authors"].append(authors[i * 2].text.split(","))
-                    break
+                    parsed["authors"].append(authors[i * 2].text.split(","))          
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in paper.text.lower():
+                        parsed["papers"].append(paper.text)
+                        parsed["authors"].append(authors[i * 2].text.split(","))
+                        break
     return parsed
 
 def get_icml(year       : int,
-             keywords   : List[str]
+             keywords   : List[str], And : bool = False
             ) -> Dict:
     parsed = {"conference": f"ICML {year}", "papers": [], "authors": []}
     res = requests.get("https://proceedings.mlr.press")
@@ -389,18 +535,30 @@ def get_icml(year       : int,
     papers = soup.find_all("div", {"class": "paper"})
     for paper in tqdm(papers):
         title = paper.find("p", {"class": "title"}).text
-        for keyword in keywords:
-            if keyword.lower() in title.lower():
+        if And:
+            flag = True
+            for keyword in keywords:
+                if keyword.lower() not in title.lower():
+                    flag = False
+                    break
+            if flag:
                 authors = paper.find("p", {"class": "details"}).find("span", {"class": "authors"}).text.split(",")
                 authors = [a.strip() for a in authors]
                 parsed["papers"].append(title)
                 parsed["authors"].append(authors)
-                
+        else :
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = paper.find("p", {"class": "details"}).find("span", {"class": "authors"}).text.split(",")
+                    authors = [a.strip() for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+                    
 
     return parsed
 
 def get_acl(year    : int,
-            keywords: List[str]) -> Dict:
+            keywords: List[str], And : bool = False ) -> Dict:
     parsed = {"conference": f"ACL {year}", "papers": [], "authors": []}
     if year >= 2021:
         res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
@@ -410,27 +568,51 @@ def get_acl(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
-            
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
+                
 
         short_div = soup.find_all("div", {"id": f"{year}acl-short"})[0]
         papers = short_div.find_all("span", {"class": "d-block"})
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
 
     elif year == 2020:
         res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
@@ -440,13 +622,25 @@ def get_acl(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
 
     elif year == 2019:
         res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
@@ -456,13 +650,25 @@ def get_acl(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
 
     elif year == 2018:
         res = requests.get(f"https://aclanthology.org/events/acl-{year}/")
@@ -472,26 +678,50 @@ def get_acl(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
             
         short_div = soup.find_all("div", {"id": f"p{str(year)[2:]}-2"})[0]
         papers = short_div.find_all("span", {"class": "d-block"})
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else:
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
     
     else:
         raise
@@ -499,7 +729,7 @@ def get_acl(year    : int,
     return parsed
 
 def get_emnlp(year    : int,
-              keywords: List[str]) -> Dict:
+              keywords: List[str], And : bool = False ) -> Dict:
     parsed = {"conference": f"EMNLP {year}", "papers": [], "authors": []}
     if year == 2022:
         res = requests.get("https://preview.aclanthology.org/emnlp-22-ingestion/volumes/2022.emnlp-main/")
@@ -508,13 +738,25 @@ def get_emnlp(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
                 
     elif year >= 2020:
         res = requests.get(f"https://aclanthology.org/events/emnlp-{year}/")
@@ -524,13 +766,25 @@ def get_emnlp(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
     
     elif year >= 2018:
         res = requests.get(f"https://aclanthology.org/events/emnlp-{year}/")
@@ -540,13 +794,25 @@ def get_emnlp(year    : int,
         for paper in tqdm(papers):
             a_list = paper.find_all("a")
             title = a_list[0].text
-            for keyword in keywords:
-                if keyword.lower() in title.lower():
+            if And:
+                flag = True
+                for keyword in keywords:
+                    if keyword.lower() not in title.lower():
+                        flag = False
+                        break
+                if flag:
                     authors = a_list[1:]
                     authors = [a.text for a in authors]
                     parsed["papers"].append(title)
                     parsed["authors"].append(authors)
-                    break
+            else :
+                for keyword in keywords:
+                    if keyword.lower() in title.lower():
+                        authors = a_list[1:]
+                        authors = [a.text for a in authors]
+                        parsed["papers"].append(title)
+                        parsed["authors"].append(authors)
+                        break
     
     else:
         raise
@@ -567,21 +833,27 @@ conference = {
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--conference", required=True, type=str, nargs="+")
-    parser.add_argument("-y", "--year", required=True, type=str, nargs="+") # 
-    parser.add_argument("-k", "--keywords", required=True, type=str, nargs="+")
+    parser.add_argument("-y", "--year", required=True, type=str, nargs="+")  
+    parser.add_argument("-k", "--keywords", required=True, type=str, nargs="+") 
+    
+    # Add And condition
+    # if andcondition is true, search papaers that must contain all keywords 
+    parser.add_argument("-a", "--andcodition", type=bool, nargs="+", default=False,help="AND condition for keywords") # True : And condition for keywords
 
     args = parser.parse_args()
-
     # Process arguments
     conferences = process_conferences(args.conference)
     years = process_years(args.year)
 
     parseds = []
     for conf in conferences:
-        print(f"Start {conf}")
+        if args.andcodition:
+            print(f"Start {conf} with And condition")
+        else:
+            print(f"Start {conf}")
         for year in years:
             try:
-                parseds.append(conference[conf](year, args.keywords))
+                parseds.append(conference[conf](year, args.keywords,args.andcodition)) # add And condition
             except:
                 print(f"{conf} {year} failed")
                 pass
