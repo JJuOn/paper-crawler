@@ -835,6 +835,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--conference", required=True, type=str, nargs="+")
     parser.add_argument("-y", "--year", required=True, type=str, nargs="+")  
     parser.add_argument("-k", "--keywords", required=True, type=str, nargs="+") 
+    
+    # Add And condition
+    # if andcondition is true, search papaers that must contain all keywords 
     parser.add_argument("-a", "--andcodition", type=bool, nargs="+", default=False,help="AND condition for keywords") # True : And condition for keywords
 
     args = parser.parse_args()
