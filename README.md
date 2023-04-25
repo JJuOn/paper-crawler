@@ -2,7 +2,7 @@
 
 ### Usage
 
-`usage: python main.py [--conference | -c CONFERENCE [CONFERENCE ...]] [--year | -y YEAR [YEAR ...]] [--keywords | -k KEYWORDS [KEYWORDS ...]]`
+`usage: python main.py [--conference | -c CONFERENCE [CONFERENCE ...]] [--year | -y YEAR [YEAR ...]] [--keywords | -k KEYWORDS [KEYWORDS ...]] [--searchtype | -t SEARCHTYPE [SEARCHTYPE ...]]`
 
 #### Special Arguments
 - Mutiple conferences:  
@@ -16,6 +16,10 @@
     `-y 2021, 2022, 2023`,  
     `-y 2021-2023`,  
     or `-y 2021~2023`
+- Choose Search Type (default is 'or'):
+    `-t and`,
+    or `-t or`
+
 
 ### Requirements
 
