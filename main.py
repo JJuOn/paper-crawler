@@ -283,7 +283,7 @@ def get_cvpr(year       : int,
              keywords   : List[str]
             ) -> Dict:
     parsed = {"conference": f"CVPR {year}", "papers": [], "authors": []}
-    if year in [2021, 2022]:
+    if year in [2021, 2022, 2023]:
         res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}?day=all")
         soup = BeautifulSoup(res.text, "html.parser")
         papers = soup.find_all("dt", {"class": "ptitle"})
