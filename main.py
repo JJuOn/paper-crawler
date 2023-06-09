@@ -371,33 +371,53 @@ def get_icml(year       : int,
              keywords   : List[str]
             ) -> Dict:
     parsed = {"conference": f"ICML {year}", "papers": [], "authors": []}
-    res = requests.get("https://proceedings.mlr.press")
-    soup = BeautifulSoup(res.text, "html.parser")
-    proceedings_list = soup.find_all("ul", {"class": "proceedings-list"})[1].find_all("li")
-    for proceeding in proceedings_list:
-        if year >= 2017:
-            if f"Proceedings of ICML {year}" in proceeding.text and "Workshop" not in proceeding.text:
-                href = proceeding.find("a")["href"]
-                break
-        else:
-            if f"ICML {year} Proceedings" in proceeding.text and "Workshop" not in proceeding.text:
-                href = proceeding.find("a")["href"]
-                break
+    if year == 2023:
+        parsed_poster = {"conference": f"ICML {year} Poster", "papers": [], "authors": []}
+        parsed_oral = {"conference": f"ICML {year} Oral", "papers": [], "authors": []}
+        res = requests.get("https://icml.cc/static/virtual/data/icml-2023-orals-posters.json")
+        data = json.loads(res.text)
+        for i in tqdm(range(data['count'])):
+            title = data['results'][i]['name']
+            authors = [author['fullname'] for author in data['results'][i]['authors']]
+            eventtype = data['results'][i]['eventtype']
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    print(title)
+                    if eventtype == 'Poster':
+                        parsed_poster["papers"].append(title)
+                        parsed_poster["authors"].append(authors)
+                        break
+                    elif eventtype == 'Oral':
+                        parsed_oral["papers"].append(title)
+                        parsed_oral["authors"].append(authors)
+                        break
+        return parsed_poster, parsed_oral
+    elif year < 2023:
+        res = requests.get("https://proceedings.mlr.press")
+        soup = BeautifulSoup(res.text, "html.parser")
+        proceedings_list = soup.find_all("ul", {"class": "proceedings-list"})[1].find_all("li")
+        for proceeding in proceedings_list:
+            if year >= 2017:
+                if f"Proceedings of ICML {year}" in proceeding.text and "Workshop" not in proceeding.text:
+                    href = proceeding.find("a")["href"]
+                    break
+            else:
+                if f"ICML {year} Proceedings" in proceeding.text and "Workshop" not in proceeding.text:
+                    href = proceeding.find("a")["href"]
+                    break
 
-    res = requests.get(f"https://proceedings.mlr.press/{href}")
-    soup = BeautifulSoup(res.text, "html.parser")
-    papers = soup.find_all("div", {"class": "paper"})
-    for paper in tqdm(papers):
-        title = paper.find("p", {"class": "title"}).text
-        for keyword in keywords:
-            if keyword.lower() in title.lower():
-                authors = paper.find("p", {"class": "details"}).find("span", {"class": "authors"}).text.split(",")
-                authors = [a.strip() for a in authors]
-                parsed["papers"].append(title)
-                parsed["authors"].append(authors)
-                
-
-    return parsed
+        res = requests.get(f"https://proceedings.mlr.press/{href}")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("div", {"class": "paper"})
+        for paper in tqdm(papers):
+            title = paper.find("p", {"class": "title"}).text
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    authors = paper.find("p", {"class": "details"}).find("span", {"class": "authors"}).text.split(",")
+                    authors = [a.strip() for a in authors]
+                    parsed["papers"].append(title)
+                    parsed["authors"].append(authors)
+        return parsed
 
 def get_acl(year    : int,
             keywords: List[str]) -> Dict:
@@ -591,7 +611,13 @@ if __name__ == "__main__":
     for parsed in parseds:
         if isinstance(parsed, tuple):
             if len(parsed) == 2:
-                pass
+                sheet = wb.worksheets[0]
+                for session in range(len(parsed)):
+                    for row, (paper, author) in enumerate(zip(parsed[session]["papers"], parsed[session]["authors"]), offset):
+                        sheet.cell(row=row, column=1).value = parsed[session]["conference"]
+                        sheet.cell(row=row, column=2).value = paper
+                        sheet.cell(row=row, column=3).value = author[0]
+                    offset += len(parsed[session]["papers"])
             elif len(parsed) == 3: # poster, spotlight, oral
                 sheet = wb.worksheets[0]
                 for session in range(len(parsed)):
