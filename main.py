@@ -87,9 +87,80 @@ def get_eccv(year       : int,
 def get_neurips(year     : int,
                 keywords : List[str]
                 ) -> Dict:
-
-    parsed = {"conference": f"NeurIPS {year}", "papers": [], "authors": []}
-    if year == 2022:
+    if year == 2023:
+        parsed_oral = {"conference": f"NeurIPS {year} Oral", "papers": [], "authors": []}
+        parsed_spotlight = {"conference": f"NeurIPS {year} Spotlight", "papers": [], "authors": []}
+        parsed_poster = {"conference": f"NeurIPS {year} Poster", "papers": [], "authors": []}
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20oral&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 100
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20oral&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_oral["papers"].append(title)
+                        parsed_oral["authors"].append(row["content"]["authors"]["value"])
+                    pbar.update(1)
+                offset += limit
+        
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20spotlight&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 400
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20spotlight&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_spotlight["papers"].append(title)
+                        parsed_spotlight["authors"].append(row["content"]["authors"]["value"])
+                    pbar.update(1)
+                offset += limit
+        
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20poster&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=NeurIPS%20{year}%20poster&details=replyCount%2Cpresentation&domain=NeurIPS.cc%2F2023%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_poster["papers"].append(title)
+                        parsed_poster["authors"].append(row["content"]["authors"]["value"])
+                    pbar.update(1)
+                offset += limit
+        
+        return parsed_oral, parsed_spotlight, parsed_poster
+    
+    elif year == 2022:
+        parsed = {"conference": f"NeurIPS {year}", "papers": [], "authors": []}
         res = requests.get(f"https://api.openreview.net/notes?content.venue=NeurIPS+{year}+Accept&details=replyCount&offset=0&limit=1000&invitation=NeurIPS.cc%2F{year}%2FConference%2F-%2FBlind_Submission")
         res_json = json.loads(res.text)
         max_count = res_json["count"]
@@ -117,6 +188,7 @@ def get_neurips(year     : int,
 
         
     else:
+        parsed = {"conference": f"NeurIPS {year}", "papers": [], "authors": []}
         res = requests.get(f"https://papers.nips.cc/paper/{year}")
         soup = BeautifulSoup(res.text, "html.parser")
         for i, paper in tqdm(enumerate(soup.find_all("div", {"class":"container-fluid"})[0].findAll("li"))):
@@ -328,7 +400,8 @@ def get_iccv(year       : int,
              keywords   : List[str]
             ) -> Dict:
     parsed = {"conference": f"ICCV {year}", "papers": [], "authors": []}
-    if year in [2021]:
+
+    if year in [2021, 2023]:
         res = requests.get(f"https://openaccess.thecvf.com/ICCV{year}?day=all")
         soup = BeautifulSoup(res.text, "html.parser")
         papers = soup.find_all("dt", {"class": "ptitle"})
