@@ -207,7 +207,81 @@ def get_neurips(year     : int,
 def get_iclr(year           : int,
              keywords       : List[str],
              ) -> Dict:
-    if year == 2023:
+    if year == 2024:
+        parsed_poster = {"conference": f"ICLR {year}", "papers": [], "authors": []}
+        parsed_spotlight = {"conference": f"ICLR {year} spotlight", "papers": [], "authors": []}
+        parsed_oral = {"conference": f"ICLR {year} oral", "papers": [], "authors": []}
+        # poster session
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20poster&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 1000
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20poster&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_poster["papers"].append(row["content"]["title"]["value"])
+                        # parsed_poster["authors"].append(row["content"]["authors"])
+                        parsed_poster["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        # spotlight session
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20spotlight&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 300
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20spotlight&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_spotlight["papers"].append(row["content"]["title"]["value"])
+                        # parsed_spotlight["authors"].append(row["content"]["authors"])
+                        parsed_spotlight["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        # oral session
+        res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20oral&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit=25&offset=0")
+        res_json = json.loads(res.text)
+        max_count = res_json["count"]
+        offset = 0
+        limit = 50
+        with tqdm(range(max_count)) as pbar:
+            while offset <= max_count:
+                res = requests.get(f"https://api2.openreview.net/notes?content.venue=ICLR%20{year}%20oral&details=replyCount%2Cpresentation&domain=ICLR.cc%2F{year}%2FConference&limit={limit}&offset={offset}")
+                res_json = json.loads(res.text)
+                for row in res_json["notes"]:
+                    title = row["content"]["title"]["value"]
+                    keyword_found = False
+                    for keyword in keywords:
+                        if keyword.lower() in title or keyword.upper() in title or keyword.capitalize() in title or keyword in title:
+                            keyword_found = True
+                            break
+                    if keyword_found:
+                        parsed_oral["papers"].append(row["content"]["title"]["value"])
+                        # parsed_oral["authors"].append(row["content"]["authors"])
+                        parsed_oral["authors"].append(["Anonymous"])
+                    pbar.update(1)
+                offset += limit
+        return  parsed_oral, parsed_spotlight, parsed_poster
+    elif year == 2023:
         parsed_5 = {"conference": f"ICLR {year} top 5%", "papers": [], "authors": []}
         parsed_25 = {"conference": f"ICLR {year} top 25%", "papers": [], "authors": []}
         parsed_poster = {"conference": f"ICLR {year}", "papers": [], "authors": []}
