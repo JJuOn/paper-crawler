@@ -429,7 +429,26 @@ def get_cvpr(year       : int,
              keywords   : List[str]
             ) -> Dict:
     parsed = {"conference": f"CVPR {year}", "papers": [], "authors": []}
-    if year in [2021, 2022, 2023]:
+    if year == 2024:
+        res = requests.get("https://cvpr.thecvf.com/Conferences/2024/AcceptedPapers")
+        soup = BeautifulSoup(res.text, "html.parser")
+        papers = soup.find_all("tr")[1:-2]
+        for i, paper in enumerate(papers):
+            title = paper.find("strong")
+            if title is None:
+                title = paper.find("a")
+            title = title.text.strip()
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    parsed["papers"].append(title)
+                    authors = paper.find("i").text.strip()
+                    authors = authors.split("·")
+                    authors = [author.split("(")[0].strip() for author in authors]
+                    parsed["authors"].append(authors)
+                    break
+
+
+    elif year in [2021, 2022, 2023]:
         res = requests.get(f"https://openaccess.thecvf.com/CVPR{year}?day=all")
         soup = BeautifulSoup(res.text, "html.parser")
         papers = soup.find_all("dt", {"class": "ptitle"})
@@ -529,7 +548,6 @@ def get_icml(year       : int,
             eventtype = data['results'][i]['eventtype']
             for keyword in keywords:
                 if keyword.lower() in title.lower():
-                    print(title)
                     if eventtype == 'Poster':
                         parsed_poster["papers"].append(title)
                         parsed_poster["authors"].append(authors)
@@ -747,11 +765,13 @@ if __name__ == "__main__":
     for conf in conferences:
         print(f"Start {conf}")
         for year in years:
-            try:
-                parseds.append(conference[conf](year, args.keywords))
-            except:
-                print(f"{conf} {year} failed")
-                pass
+            # try:
+            parsed = conference[conf](year, args.keywords)
+            if parsed is not None:
+                parseds.append(parsed)
+            # except:
+            #     print(f"{conf} {year} failed")
+            #     pass
 
     wb = openpyxl.Workbook()
     offset = 1
