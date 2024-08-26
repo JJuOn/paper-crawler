@@ -4,6 +4,7 @@ import sys
 import openpyxl
 import requests
 import os
+import csv
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -47,47 +48,66 @@ def upper_title(title: str) -> str:
 def get_eccv(year       : int,
              keywords   : List[str]
             ) -> Dict:
-    res = requests.get("https://www.ecva.net/papers.php")
-    soup = BeautifulSoup(res.text, "html.parser")
+    if year == 2024:
+        parsed = {"conference": f"ECCV {year}", "papers": [], "authors": []}
+        with open("data_eccv2024.csv", "rt") as f:
+            reader = csv.reader(f)
+            for row in tqdm(reader):
+                found = False
+                for keyword in keywords:
+                    if keyword.lower() in row[0].lower():
+                        found = True
+                        break
+                if found:
+                    parsed["papers"].append(row[0])
+                    parsed["authors"].append([author.replace("*", "") for author in row[1].split("; ")])
 
-    papers = soup.findAll("dt", {"class": "ptitle"})
-    authors = soup.findAll("dd")
-    assert len(papers) == len(authors) // 2
 
-    indices = []
-    parsed = {"conference": f"ECCV {year}", "papers": [], "authors": []}
-    for i, paper in tqdm(enumerate(papers)):
-        if f"eccv_{year}" in paper.find("a")["href"]:
-            for keyword in keywords:
-                if keyword.lower() in paper.text or keyword.upper() in paper.text or keyword.capitalize() in paper.text:
-                    parsed["papers"].append(paper.text.strip())
-                    indices.append(i)
-                    break
-        else:
-            continue
-                
-    for idx in indices:
-        # parsed["authors"]
-        if year in [2020, 2022]:
-            author = authors[idx * 2].text.split(",")
-            for j in range(len(author)):
-                author[j] = author[j].strip()
-            parsed["authors"].append(author)
-        elif year in [2018]:
-            author = authors[idx * 2].text.split("and")
-            for j in range(len(author)):
-                author[j] = author[j].strip().split(',')
-                author[j][0], author[j][1] = author[j][1].strip(), author[j][0].strip()
-                author[j] = " ".join(author[j])
-            parsed["authors"].append(author)
-        else:
-            raise
+    else:
+        res = requests.get("https://www.ecva.net/papers.php")
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        papers = soup.findAll("dt", {"class": "ptitle"})
+        authors = soup.findAll("dd")
+        assert len(papers) == len(authors) // 2
+
+        indices = []
+        parsed = {"conference": f"ECCV {year}", "papers": [], "authors": []}
+        for i, paper in tqdm(enumerate(papers)):
+            if f"eccv_{year}" in paper.find("a")["href"]:
+                for keyword in keywords:
+                    if keyword.lower() in paper.text or keyword.upper() in paper.text or keyword.capitalize() in paper.text:
+                        parsed["papers"].append(paper.text.strip())
+                        indices.append(i)
+                        break
+            else:
+                continue
+                    
+        for idx in indices:
+            # parsed["authors"]
+            if year in [2020, 2022]:
+                author = authors[idx * 2].text.split(",")
+                for j in range(len(author)):
+                    author[j] = author[j].strip()
+                parsed["authors"].append(author)
+            elif year in [2018]:
+                author = authors[idx * 2].text.split("and")
+                for j in range(len(author)):
+                    author[j] = author[j].strip().split(',')
+                    author[j][0], author[j][1] = author[j][1].strip(), author[j][0].strip()
+                    author[j] = " ".join(author[j])
+                parsed["authors"].append(author)
+            else:
+                raise NotImplementedError
     return parsed
 
 def get_neurips(year     : int,
                 keywords : List[str]
                 ) -> Dict:
-    if year == 2023:
+    if year == 2024:
+        return None
+
+    elif year == 2023:
         parsed_oral = {"conference": f"NeurIPS {year} Oral", "papers": [], "authors": []}
         parsed_spotlight = {"conference": f"NeurIPS {year} Spotlight", "papers": [], "authors": []}
         parsed_poster = {"conference": f"NeurIPS {year} Poster", "papers": [], "authors": []}
@@ -432,7 +452,7 @@ def get_cvpr(year       : int,
     if year == 2024:
         res = requests.get("https://cvpr.thecvf.com/Conferences/2024/AcceptedPapers")
         soup = BeautifulSoup(res.text, "html.parser")
-        papers = soup.find_all("tr")[1:-2]
+        papers = soup.find_all("tr")[2:-2]
         for i, paper in enumerate(papers):
             title = paper.find("strong")
             if title is None:
@@ -537,7 +557,27 @@ def get_icml(year       : int,
              keywords   : List[str]
             ) -> Dict:
     parsed = {"conference": f"ICML {year}", "papers": [], "authors": []}
-    if year == 2023:
+    if year == 2024:
+        parsed_poster = {"conference": f"ICML {year} Poster", "papers": [], "authors": []}
+        parsed_oral = {"conference": f"ICML {year} Oral", "papers": [], "authors": []}
+        res = requests.get("https://icml.cc/static/virtual/data/icml-2024-orals-posters.json")
+        data = json.loads(res.text)
+        for i in tqdm(range(data['count'])):
+            title = data['results'][i]['name']
+            authors = [author['fullname'] for author in data['results'][i]['authors']]
+            eventtype = data['results'][i]['eventtype']
+            for keyword in keywords:
+                if keyword.lower() in title.lower():
+                    if eventtype == 'Poster':
+                        parsed_poster["papers"].append(title)
+                        parsed_poster["authors"].append(authors)
+                        break
+                    elif eventtype == 'Oral':
+                        parsed_oral["papers"].append(title)
+                        parsed_oral["authors"].append(authors)
+                        break
+        return parsed_poster, parsed_oral
+    elif year == 2023:
         parsed_poster = {"conference": f"ICML {year} Poster", "papers": [], "authors": []}
         parsed_oral = {"conference": f"ICML {year} Oral", "papers": [], "authors": []}
         res = requests.get("https://icml.cc/static/virtual/data/icml-2023-orals-posters.json")

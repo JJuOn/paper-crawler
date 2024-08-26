@@ -30,9 +30,9 @@
 ### Confereces
 - Neural Information Processing Systems (NeurIPS ~2023)
 - International Conference on Learning Representations (ICLR ~2024)
-- European Conference on Computer Vision (ECCV 2018~2022)
+- European Conference on Computer Vision (ECCV 2018~2024)
 - IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR ~2024)
 - International Conference on Computer Vision (ICCV ~2023)
-- International Conference on Machine Learning (ICML ~2023)
+- International Conference on Machine Learning (ICML ~2024)
 - Annual Meeting of the Assosication for Computational Linguistics (ACL 2018~2022)
 - Conference on Empirical Methods in Natural Language Processing (EMNLP 2018~2022)
