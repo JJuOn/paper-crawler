@@ -250,8 +250,8 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_poster["papers"].append(row["content"]["title"]["value"])
-                        # parsed_poster["authors"].append(row["content"]["authors"])
-                        parsed_poster["authors"].append(["Anonymous"])
+                        parsed_poster["authors"].append(row["content"]["authors"]["value"])
+                        # parsed_poster["authors"].append(["Anonymous"])
                     pbar.update(1)
                 offset += limit
         # spotlight session
@@ -273,8 +273,8 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_spotlight["papers"].append(row["content"]["title"]["value"])
-                        # parsed_spotlight["authors"].append(row["content"]["authors"])
-                        parsed_spotlight["authors"].append(["Anonymous"])
+                        parsed_spotlight["authors"].append(row["content"]["authors"]["value"])
+                        # parsed_spotlight["authors"].append(["Anonymous"])
                     pbar.update(1)
                 offset += limit
         # oral session
@@ -296,11 +296,11 @@ def get_iclr(year           : int,
                             break
                     if keyword_found:
                         parsed_oral["papers"].append(row["content"]["title"]["value"])
-                        # parsed_oral["authors"].append(row["content"]["authors"])
-                        parsed_oral["authors"].append(["Anonymous"])
+                        parsed_oral["authors"].append(row["content"]["authors"]["value"])
+                        # parsed_oral["authors"].append(["Anonymous"])
                     pbar.update(1)
                 offset += limit
-        return  parsed_oral, parsed_spotlight, parsed_poster
+        return parsed_oral, parsed_spotlight, parsed_poster
     elif year == 2023:
         parsed_5 = {"conference": f"ICLR {year} top 5%", "papers": [], "authors": []}
         parsed_25 = {"conference": f"ICLR {year} top 25%", "papers": [], "authors": []}
