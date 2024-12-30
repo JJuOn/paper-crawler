@@ -28,7 +28,7 @@
 > requests
 
 ### Confereces
-- Neural Information Processing Systems (NeurIPS ~2023)
+- Neural Information Processing Systems (NeurIPS ~2024)
 - International Conference on Learning Representations (ICLR ~2024)
 - European Conference on Computer Vision (ECCV 2018~2024)
 - IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR ~2024)
