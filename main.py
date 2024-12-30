@@ -104,10 +104,7 @@ def get_eccv(year       : int,
 def get_neurips(year     : int,
                 keywords : List[str]
                 ) -> Dict:
-    if year == 2024:
-        return None
-
-    elif year == 2023:
+    if year == 2023 or year == 2024:
         parsed_oral = {"conference": f"NeurIPS {year} Oral", "papers": [], "authors": []}
         parsed_spotlight = {"conference": f"NeurIPS {year} Spotlight", "papers": [], "authors": []}
         parsed_poster = {"conference": f"NeurIPS {year} Poster", "papers": [], "authors": []}
